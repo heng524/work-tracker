@@ -1,0 +1,9 @@
+{
+  "name": "工作天數與薪資記錄",
+  "short_name": "薪資記錄",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#2563eb",
+  "icons": []
+}
