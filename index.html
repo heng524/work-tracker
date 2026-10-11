@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作天數與薪資記錄</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 16px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            margin-bottom: 16px;
+        }
+        .form-group {
+            margin-bottom: 12px;
+        }
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        button:active {
+            opacity: 0.9;
+        }
+        .summary {
+            display: flex;
+            justify-content: space-between;
+            background: #eff6ff;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+        .summary div {
+            text-align: center;
+            flex: 1;
+        }
+        .summary span {
+            display: block;
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        th, td {
+            border-bottom: 1px solid var(--border-color);
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f1f5f9;
+        }
+        .delete-btn {
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            width: auto;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>💼 工作天數與薪資記錄</h2>
+
+    <!-- 設定區 -->
+    <div class="card">
+        <h3>基本設定</h3>
+        <div class="form-group">
+            <label>計薪模式</label>
+            <select id="payType" onchange="togglePayType()">
+                <option value="monthly">月薪制</option>
+                <option value="daily">日薪制</option>
+                <option value="hourly">時薪制</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>預設薪資 / 時薪 / 日薪 (NTD)</label>
+            <input type="number" id="baseRate" value="35000">
+        </div>
+    </div>
+
+    <!-- 打卡/記錄區 -->
+    <div class="card">
+        <h3>新增工作記錄</h3>
+        <div class="form-group">
+            <label>日期</label>
+            <input type="date" id="workDate">
+        </div>
+        <div class="form-group">
+            <label>工作時數 / 備註</label>
+            <input type="number" id="workHours" value="8" placeholder="時數">
+        </div>
+        <button onclick="addRecord()">新增記錄</button>
+    </div>
+
+    <!-- 統計結算 -->
+    <div class="card">
+        <h3>本月統計</h3>
+        <div class="summary">
+            <div>總工作天數 <span id="totalDays">0</span> 天</div>
+            <div>總工作時數 <span id="totalHours">0</span> 小時</div>
+            <div>預估總薪資 <span id="totalSalary">$0</span></div>
+        </div>
+    </div>
+
+    <!-- 歷史記錄 -->
+    <div class="card">
+        <h3>歷史明細</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>日期</th>
+                    <th>時數</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="recordList">
+                <!-- 動態插入 -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let records = JSON.parse(localStorage.getItem('work_records')) || [];
+
+    // 初始化預設日期為今天
+    document.getElementById('workDate').valueAsDate = new Date();
+
+    function saveAndRender() {
+        localStorage.setItem('work_records', JSON.stringify(records));
+        render();
+    }
+
+    function addRecord() {
+        const date = document.getElementById('workDate').value;
+        const hours = parseFloat(document.getElementById('workHours').value) || 0;
+        
+        if (!date) {
+            alert('請選擇日期');
+            return;
+        }
+
+        records.push({ date, hours });
+        records.sort((a, b) => new Date(b.date) - new Date(a.date));
+        saveAndRender();
+    }
+
+    function deleteRecord(index) {
+        records.splice(index, 1);
+        saveAndRender();
+    }
+
+    function render() {
+        const tbody = document.getElementById('recordList');
+        tbody.innerHTML = '';
+
+        let totalDays = records.length;
+        let totalHours = 0;
+
+        records.forEach((record, index) => {
+            totalHours += record.hours;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${record.date}</td>
+                <td>${record.hours} 小時</td>
+                <td><button class="delete-btn" onclick="deleteRecord(${index})">刪除</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById('totalDays').innerText = totalDays;
+        document.getElementById('totalHours').innerText = totalHours;
+
+        // 計算薪資
+        const payType = document.getElementById('payType').value;
+        const baseRate = parseFloat(document.getElementById('baseRate').value) || 0;
+        let totalSalary = 0;
+
+        if (payType === 'monthly') {
+            totalSalary = baseRate;
+        } else if (payType === 'daily') {
+            totalSalary = totalDays * baseRate;
+        } else if (payType === 'hourly') {
+            totalSalary = totalHours * baseRate;
+        }
+
+        document.getElementById('totalSalary').innerText = '$' + totalSalary.toLocaleString();
+    }
+
+    render();
+</script>
+
+</body>
+</html>
